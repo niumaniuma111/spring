@@ -53,7 +53,22 @@ public class AttractionController {
 
         QueryWrapper<Attraction> qw = new QueryWrapper<>();
         qw.eq("status", 1);
-        if (StringUtils.hasText(keyword)) qw.like("name", keyword.trim());
+        if (StringUtils.hasText(keyword)) {
+            String kw = keyword.trim();
+            // 关键词同时命中：景点名称 / 详细地址 / 城市名 / 省份名
+            // 例如搜"桂林"既要命中名称含桂林的景点，也要命中坐落在桂林的龙脊梯田
+            List<Long> hitProvinceIds = provinceMapper.selectList(
+                            new QueryWrapper<Province>().like("name", kw))
+                    .stream().map(Province::getId).collect(Collectors.toList());
+            List<Long> hitCityIds = cityMapper.selectList(
+                            new QueryWrapper<City>().like("name", kw))
+                    .stream().map(City::getId).collect(Collectors.toList());
+            qw.and(w -> {
+                w.like("name", kw).or().like("address", kw);
+                if (!hitProvinceIds.isEmpty()) w.or().in("province_id", hitProvinceIds);
+                if (!hitCityIds.isEmpty()) w.or().in("city_id", hitCityIds);
+            });
+        }
         if (provinceId != null) qw.eq("province_id", provinceId);
         if (cityId != null) qw.eq("city_id", cityId);
         if (StringUtils.hasText(level)) qw.eq("level", level);

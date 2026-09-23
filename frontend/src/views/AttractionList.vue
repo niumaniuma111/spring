@@ -26,7 +26,7 @@
 
     <!-- 筛选栏 -->
     <div class="filter-bar">
-      <el-input v-model="query.keyword" placeholder="输入景点名称关键词搜索" clearable style="width: 250px"
+      <el-input v-model="query.keyword" placeholder="输入关键词：景点名称 / 城市 / 地区" clearable style="width: 270px"
                 @keyup.enter="load" @clear="load">
         <template #append>
           <el-button @click="load">搜索</el-button>

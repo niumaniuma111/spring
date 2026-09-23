@@ -77,6 +77,12 @@ check('列表含省市名称/等级/评分', all(k in r['data']['list'][0] for k
 r = call('GET', '/attractions?keyword=' + urllib.request.quote('长城'), token=guest_token)
 check('关键词搜索-长城', r['data']['total'] >= 1 and any('八达岭长城' in a['name'] for a in r['data']['list']), str(r)[:200])
 
+r = call('GET', '/attractions?keyword=' + urllib.request.quote('桂林'), token=guest_token)
+check('关键词搜索-桂林命中名称+城市(漓江/龙脊梯田)', r['data']['total'] == 2 and
+      any('龙脊梯田' in a['name'] for a in r['data']['list']), str(r)[:200])
+r = call('GET', '/attractions?keyword=' + urllib.request.quote('三亚'), token=guest_token)
+check('关键词搜索-城市名三亚命中4景区', r['data']['total'] == 4, 'total=' + str(r['data']['total']))
+
 r = call('GET', '/attractions?provinceId=1', token=guest_token)
 check('按省筛选-北京', r['data']['total'] == 6, 'total=' + str(r['data']['total']))
 r = call('GET', '/attractions?provinceId=3&cityId=3', token=guest_token)
