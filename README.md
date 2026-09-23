@@ -11,27 +11,6 @@
 | 数据库 | MySQL 8.0 |
 | 部署 | Docker Compose 一键启动（mysql / backend / frontend 三容器） |
 
-## 快速启动
-
-```bash
-docker compose up -d --build
-```
-
-启动后访问：
-
-- 前台游客端：<http://localhost>
-- 后台管理端：<http://localhost/admin/login>
-- 后端 API：<http://localhost:8080/api/attractions>
-- MySQL（宿主机）：`localhost:33061`，root / root123456
-
-## 预置账号
-
-| 端 | 账号 | 密码 | 说明 |
-|---|---|---|---|
-| 后台管理端 | admin | admin123 | 系统初始化分配，不能注册 |
-| 前台 | tourist123 | 123456 | 示例用户（启用） |
-| 前台 | tourist456 | 123456 | 示例用户（禁用，用于验证禁用登录拦截） |
-
 ## 功能清单
 
 前台游客端：注册（用户名唯一校验）、登录、景点分页列表、按省市筛选（省→市联动）、
