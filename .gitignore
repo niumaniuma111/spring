@@ -3,9 +3,10 @@ node_modules/
 dist/
 target/
 
-# 验证脚本生成的临时产物（可随时重新生成）
+# 截图/审计等本地临时产物（不进仓库）
 tools/shots/
 tools/audit/
+tools/doc_shots/
 
 # IDE / 系统
 .idea/
@@ -16,3 +17,7 @@ Thumbs.db
 
 # 日志
 *.log
+
+# 密钥（DeepSeek API Key 等，绝不进仓库）
+.env
+.env.*
