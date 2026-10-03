@@ -23,3 +23,18 @@ jwt:
   # HS256 需要至少 32 字节密钥
   secret: TourismSiteJwtSecretKey-2026-Neusoft-Practice-0123456789
   expire-hours: 72
+
+deepseek:
+  # API Key 必须通过环境变量注入（.env / 启动脚本），禁止写死进代码
+  api-key: ${DEEPSEEK_API_KEY:}
+  base-url: https://api.deepseek.com
+  model: deepseek-chat
+  connect-timeout-seconds: 10
+  read-timeout-seconds: 120
+
+amap:
+  # 高德开放平台 key：Web 服务 key（后端）+ Web端 JS key（前端地图），均环境变量注入
+  key: ${AMAP_KEY:}
+  js-key: ${AMAP_JS_KEY:}
+  security-code: ${AMAP_SECURITY_CODE:}
+  timeout-seconds: 10

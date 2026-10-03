@@ -23,6 +23,8 @@ public class Attraction {
     private BigDecimal rating;  // 综合评分 0~5
     private Integer views;      // 浏览热度
     private Integer status;     // 1 已发布 0 下架
+    private BigDecimal lng;     // 经度(高德GCJ-02)
+    private BigDecimal lat;     // 纬度(高德GCJ-02)
     private LocalDateTime createdAt;
 
     public Long getId() { return id; }
@@ -51,6 +53,10 @@ public class Attraction {
     public void setViews(Integer views) { this.views = views; }
     public Integer getStatus() { return status; }
     public void setStatus(Integer status) { this.status = status; }
+    public BigDecimal getLng() { return lng; }
+    public void setLng(BigDecimal lng) { this.lng = lng; }
+    public BigDecimal getLat() { return lat; }
+    public void setLat(BigDecimal lat) { this.lat = lat; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }

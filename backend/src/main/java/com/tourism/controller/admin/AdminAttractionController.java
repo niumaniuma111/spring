@@ -10,6 +10,7 @@ import com.tourism.exception.BizException;
 import com.tourism.mapper.AttractionMapper;
 import com.tourism.mapper.CityMapper;
 import com.tourism.mapper.ProvinceMapper;
+import com.tourism.service.AmapService;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,7 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/** 管理端：景点管理（列表/条件查询/新增/修改/删除） */
+/** 管理端：景点管理（列表/条件查询/新增/修改/删除；保存后自动地理编码打点） */
 @RestController
 @RequestMapping("/api/admin/attractions")
 public class AdminAttractionController {
@@ -26,9 +27,10 @@ public class AdminAttractionController {
     private final AttractionMapper attractionMapper;
     private final ProvinceMapper provinceMapper;
     private final CityMapper cityMapper;
+    private final AmapService amapService;
 
-    public AdminAttractionController(AttractionMapper a, ProvinceMapper p, CityMapper c) {
-        this.attractionMapper = a; this.provinceMapper = p; this.cityMapper = c;
+    public AdminAttractionController(AttractionMapper a, ProvinceMapper p, CityMapper c, AmapService s) {
+        this.attractionMapper = a; this.provinceMapper = p; this.cityMapper = c; this.amapService = s;
     }
 
     /** 分页 + 条件查询（名称模糊/省市/等级），管理端可看到未发布景点 */
@@ -66,7 +68,13 @@ public class AdminAttractionController {
         if (a.getRating() == null) a.setRating(new BigDecimal("4.0"));
         if (a.getViews() == null) a.setViews(0);
         if (a.getStatus() == null) a.setStatus(1);
+        // 图片不强制管理员选择：为空时从 75 张真实景点图库中随机分配一张
+        if (!StringUtils.hasText(a.getImage())) {
+            a.setImage("/img/scenic/a" + java.util.concurrent.ThreadLocalRandom.current().nextInt(1, 76) + ".jpg");
+        }
         attractionMapper.insert(a);
+        // 前端已定位（带坐标）则直接用；否则按地址自动编码
+        if (a.getLng() == null || a.getLat() == null) fillGeo(a);
         return Result.ok();
     }
 
@@ -75,6 +83,8 @@ public class AdminAttractionController {
         validate(a);
         a.setId(id);
         attractionMapper.updateById(a);
+        // 前端未定位（无坐标）说明地址可能变化，按新地址重新编码打点
+        if (a.getLng() == null || a.getLat() == null) fillGeo(a);
         return Result.ok();
     }
 
@@ -100,5 +110,43 @@ public class AdminAttractionController {
             throw new BizException("综合评分需在 0-5 之间");
         // 防止越权设置省份数据来源：校验省份存在
         if (provinceMapper.selectById(a.getProvinceId()) == null) throw new BizException("省份不存在");
+    }
+
+    /**
+     * 自动地理编码打点：用「省份+城市+详细地址（缺省用景点名）」调高德编码，
+     * 成功则回写 lng/lat；顺带补全城市 adcode（天气查询依赖）。失败静默跳过，不打断保存。
+     */
+    private void fillGeo(Attraction a) {
+        try {
+            if (!amapService.isAvailable() || a.getId() == null) return;
+            City city = cityMapper.selectById(a.getCityId());
+            if (city == null) return;
+            Province province = provinceMapper.selectById(a.getProvinceId());
+            String pName = province != null ? province.getName() : "";
+            // 直辖市（省名=市名，如北京/北京）只拼一次，避免"北京北京市…"
+            String prefix = (pName.isEmpty() || pName.equals(city.getName())
+                    || city.getName().contains(pName)) ? "" : pName;
+            String address = prefix + city.getName()
+                    + (StringUtils.hasText(a.getAddress()) ? a.getAddress() : a.getName());
+            Map<String, Object> g = amapService.geocode(address, city.getName());
+            if (g == null) return;
+            Attraction patch = new Attraction();
+            patch.setId(a.getId());
+            patch.setLng(new BigDecimal(String.valueOf(g.get("lng"))));
+            patch.setLat(new BigDecimal(String.valueOf(g.get("lat"))));
+            attractionMapper.updateById(patch);
+            a.setLng(patch.getLng());
+            a.setLat(patch.getLat());
+            // 城市缺 adcode 则补（天气/工具查询依赖）
+            String adcode = String.valueOf(g.get("adcode"));
+            if (!StringUtils.hasText(city.getAdcode()) && StringUtils.hasText(adcode)) {
+                City patchCity = new City();
+                patchCity.setId(city.getId());
+                patchCity.setAdcode(adcode);
+                cityMapper.updateById(patchCity);
+            }
+        } catch (Exception ignore) {
+            // 打点失败不影响景点保存，地图页后续可通过编辑地址重试
+        }
     }
 }

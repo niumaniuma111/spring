@@ -3,9 +3,12 @@
     <!-- 顶部导航 -->
     <header class="navbar">
       <div class="nav-inner">
-        <div class="logo" @click="$router.push('/')">🏞️ <span>游遍中国</span></div>
+        <div class="logo" @click="$router.push('/')">🏞️ <span>知行山水</span></div>
         <div class="spacer"></div>
         <template v-if="user">
+          <el-button link type="primary" @click="$router.push('/assistant')">🤖 AI 行程助手</el-button>
+          <el-button link type="primary" @click="$router.push('/orders')">🎫 我的订单</el-button>
+          <el-button link type="primary" @click="$router.push('/map')">🗺️ 地图找景点</el-button>
           <el-tag type="success" effect="plain" round>您好，{{ user.nickname }}</el-tag>
           <el-button link type="danger" @click="logout">退出登录</el-button>
         </template>
@@ -90,7 +93,7 @@
       </div>
     </main>
 
-    <footer class="footer">游遍中国 · 生产实习作品 · SpringBoot + Vue 前后端分离</footer>
+    <footer class="footer">知行山水 · 生产实习作品 · SpringBoot + Vue 前后端分离</footer>
   </div>
 </template>
 

@@ -10,6 +10,7 @@ public class City {
     private Long id;
     private Long provinceId;
     private String name;
+    private String adcode;      // 高德城市区划码(天气查询用)
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -17,4 +18,6 @@ public class City {
     public void setProvinceId(Long provinceId) { this.provinceId = provinceId; }
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
+    public String getAdcode() { return adcode; }
+    public void setAdcode(String adcode) { this.adcode = adcode; }
 }

@@ -1,7 +1,7 @@
 <template>
   <div class="auth-wrap">
     <el-card class="auth-card">
-      <h2 class="title">🏞️ 游遍中国 · 登录</h2>
+      <h2 class="title">🏞️ 知行山水 · 登录</h2>
       <el-form ref="formRef" :model="form" :rules="rules" label-width="0" size="large">
         <el-form-item prop="username">
           <el-input v-model="form.username" placeholder="用户名" :prefix-icon="User" />

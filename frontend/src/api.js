@@ -58,5 +58,75 @@ export default {
   deleteCity: (id) => api.delete(`/admin/regions/cities/${id}`),
   users: (params) => api.get('/admin/users', { params }),
   changeUserStatus: (id, status) => api.put(`/admin/users/${id}/status`, null, { params: { status } }),
-  stats: () => api.get('/admin/stats')
+  stats: () => api.get('/admin/stats'),
+
+  // ---- 后台订单管理 ----
+  adminOrders: (params) => api.get('/admin/orders', { params }),
+  adminOrderStats: () => api.get('/admin/orders/stats'),
+  adminGeocode: (address, city) => api.get('/admin/amap/geocode', { params: { address, city } }),
+  adminRegeo: (lng, lat) => api.get('/admin/amap/regeo', { params: { lng, lat } }),
+  nearby: (attractionId, type) => api.get('/amap/nearby', { params: { attractionId, type } }),
+
+  // ---- AI 行程助手（会话管理走 axios；聊天走 fetch 流式，axios 不支持流式读取） ----
+  createSession: (title) => api.post('/assistant/sessions', title ? { title } : {}),
+  sessions: () => api.get('/assistant/sessions'),
+  sessionMessages: (id) => api.get(`/assistant/sessions/${id}/messages`),
+  deleteSession: (id) => api.delete(`/assistant/sessions/${id}`),
+
+  // ---- 门票订单 ----
+  createOrder: (data) => api.post('/orders', data),
+  orders: (params) => api.get('/orders', { params }),
+  orderDetail: (id) => api.get(`/orders/${id}`),
+  payOrder: (id) => api.post(`/orders/${id}/pay`),
+  cancelOrder: (id) => api.post(`/orders/${id}/cancel`),
+
+  // ---- 高德地图 ----
+  amapConfig: () => api.get('/amap/config'),
+  mapPoints: () => api.get('/attractions/map'),
+  weather: (attractionId) => api.get('/amap/weather', { params: { attractionId } })
+}
+
+/**
+ * AI 聊天（SSE 流式）：POST + fetch ReadableStream，按 \n\n 切分事件、半包缓冲。
+ * 回调：onDelta(增量文本) / onDone(messageId) / onError(错误信息)
+ */
+export function chatStream(sessionId, message, { onDelta, onDone, onError }) {
+  const user = JSON.parse(localStorage.getItem('user') || 'null')
+  return fetch('/api/assistant/chat', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + (user && user.token ? user.token : '')
+    },
+    body: JSON.stringify({ sessionId, message })
+  }).then(async (resp) => {
+    const ctype = resp.headers.get('content-type') || ''
+    // 非 SSE 响应（如 401/403/参数错误返回 JSON Result）→ 统一按错误处理
+    if (!ctype.includes('text/event-stream')) {
+      let msg = '请求失败'
+      try { const b = await resp.json(); msg = b.msg || msg } catch (ignore) {}
+      onError && onError(msg)
+      return
+    }
+    const reader = resp.body.getReader()
+    const decoder = new TextDecoder()
+    let buf = ''
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      buf += decoder.decode(value, { stream: true })
+      const events = buf.split('\n\n')
+      buf = events.pop()                       // 半包留到下一轮
+      for (const ev of events) {
+        if (!ev.trim()) continue
+        const name = (ev.match(/event:\s*(\w+)/) || [])[1]
+        const dataRaw = (ev.match(/data:\s*([\s\S]*)/) || [])[1] || '{}'
+        let data = {}
+        try { data = JSON.parse(dataRaw) } catch (ignore) {}
+        if (name === 'delta') onDelta && onDelta(data.content || '')
+        else if (name === 'done') onDone && onDone(data.messageId)
+        else if (name === 'error') onError && onError(data.message || 'AI 服务异常')
+      }
+    }
+  }).catch(() => onError && onError('网络异常，请稍后重试'))
 }

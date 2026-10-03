@@ -7,6 +7,7 @@
         <el-menu-item index="/admin/attractions">🏛️ 景点管理</el-menu-item>
         <el-menu-item index="/admin/regions">🗺️ 省市管理</el-menu-item>
         <el-menu-item index="/admin/users">👥 用户管理</el-menu-item>
+        <el-menu-item index="/admin/orders">🎫 订单管理</el-menu-item>
         <el-menu-item index="/admin/stats">📊 数据统计</el-menu-item>
       </el-menu>
     </el-aside>

@@ -32,6 +32,12 @@ services:
       DB_USER: root
       DB_PASS: root123456
       TZ: Asia/Shanghai
+      # DeepSeek API Key：从宿主机 .env（gitignore）注入，key 不进仓库
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      # 高德开放平台：Web 服务 key + Web端 JS key + 安全密钥
+      AMAP_KEY: ${AMAP_KEY:-}
+      AMAP_JS_KEY: ${AMAP_JS_KEY:-}
+      AMAP_SECURITY_CODE: ${AMAP_SECURITY_CODE:-}
     ports:
       - "8080:8080"
     depends_on:

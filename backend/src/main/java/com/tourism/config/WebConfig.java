@@ -25,8 +25,14 @@ public class WebConfig implements WebMvcConfigurer {
                 .addPathPatterns("/api/admin/**")
                 .excludePathPatterns("/api/admin/auth/login");
         // 前台浏览：必须登录（注册/登录接口不拦截）
+        // 注意 /api/img/**（上传图片读取）必须公开：<img> 标签无法携带 Bearer 头，
+        // 图片内容本身是公开展示的景点封面，无鉴权必要
+        // /api/orders/qrcode（模拟支付二维码）同样公开：<img> 无法携带 Bearer 头，内容为无敏感信息的演示文本
         registry.addInterceptor(loginInterceptor)
-                .addPathPatterns("/api/attractions", "/api/attractions/*", "/api/provinces", "/api/cities");
+                .addPathPatterns("/api/attractions", "/api/attractions/*", "/api/provinces", "/api/cities",
+                        "/api/assistant/**", "/api/orders", "/api/orders/**",
+                        "/api/attractions/map", "/api/amap/weather", "/api/amap/nearby")
+                .excludePathPatterns("/api/orders/qrcode");
     }
 
     @Override
