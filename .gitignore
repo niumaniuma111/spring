@@ -3,11 +3,6 @@ node_modules/
 dist/
 target/
 
-# 截图/审计等本地临时产物（不进仓库）
-tools/shots/
-tools/audit/
-tools/doc_shots/
-
 # IDE / 系统
 .idea/
 .vscode/
